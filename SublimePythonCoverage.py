@@ -83,6 +83,7 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         view = self.view
+        view.erase_regions('SublimePythonCoverage')
         fname = view.file_name()
         if not fname:
             return
@@ -91,6 +92,11 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
         if not cov_file:
             print 'Could not find .coverage file.'
             return
+
+        if find(fname, '.coverage-loud'):
+            flags = sublime.DRAW_EMPTY | sublime.DRAW_OUTLINED
+        else:
+            flags = sublime.HIDDEN
 
         # run analysis and find uncovered lines
         cov = coverage(data_file=cov_file)
@@ -106,10 +112,9 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
                 outlines.append(view.full_line(view.text_point(line - 1, 0)))
 
         # update highlighted regions
-        view.erase_regions('SublimePythonCoverage')
         if outlines:
             view.add_regions('SublimePythonCoverage', outlines,
-                             'markup.inserted', 'bookmark', sublime.HIDDEN)
+                             'coverage.missing', 'bookmark', flags)
 
 # manually import the module containing ST2's default build command,
 # since it's in a module whose name is a Python keyword :-s
