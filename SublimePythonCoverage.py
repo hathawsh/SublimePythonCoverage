@@ -93,21 +93,20 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
             print 'Could not find .coverage file.'
             return
 
+        config_file = os.path.join(os.path.dirname(cov_file), '.coveragerc')
+
         if find(fname, '.coverage-loud'):
             flags = sublime.DRAW_EMPTY | sublime.DRAW_OUTLINED
         else:
             flags = sublime.HIDDEN
 
         # run analysis and find uncovered lines
-        cov = coverage(data_file=cov_file)
+        cov = coverage(data_file=cov_file, config_file=config_file)
         outlines = []
         omit_matcher = FnmatchMatcher(cov.omit)
         if not omit_matcher.match(fname):
-            cov_dir = os.path.dirname(cov_file)
-            os.chdir(cov_dir)
-            relpath = os.path.relpath(fname, cov_dir)
             cov.load()
-            f, s, excluded, missing, m = cov.analysis2(relpath)
+            f, s, excluded, missing, m = cov.analysis2(fname)
             for line in missing:
                 outlines.append(view.full_line(view.text_point(line - 1, 0)))
 
