@@ -95,7 +95,7 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
 
         config_file = os.path.join(os.path.dirname(cov_file), '.coveragerc')
 
-        if find(fname, '.coverage-loud'):
+        if find(fname, '.coverage-noisy'):
             flags = sublime.DRAW_EMPTY | sublime.DRAW_OUTLINED
         else:
             flags = sublime.HIDDEN
