@@ -145,6 +145,7 @@ class TestExecCommand(ExecCommand):
                 kw['working_dir'] = os.path.dirname(testpath)
 
             kw['cmd'] = self.cmd(runner, testpath)
+            kw['env'] = {'TESTFILE': fname}
 
         super(TestExecCommand, self).run(**kw)
 
