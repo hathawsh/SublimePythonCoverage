@@ -1,38 +1,56 @@
 # bootstrap
 import os
+import sys
 plugin_path = os.path.dirname(__file__)
 if not os.path.exists(os.path.join(plugin_path, 'coverage')):
     # Fetch coverage.py
-    print 'SublimePythonCoverage installing coverage.py.'
+    print('SublimePythonCoverage installing coverage.py.')
 
-    from StringIO import StringIO
+    from io import BytesIO
     import tarfile
-    import urllib
     from hashlib import md5
 
-    SOURCE = 'http://pypi.python.org/packages/source/c/coverage/coverage-3.6.tar.gz'
-    MD5SUM = '67d4e393f4c6a5ffc18605409d2aa1ac'
+    try:
+        # Python 3
+        from urllib.request import urlopen
+    except ImportError:
+        # Python 2
+        from urllib import urlopen
 
-    payload = urllib.urlopen(SOURCE).read()
+    SOURCE = (
+        'http://pypi.python.org/packages/source/c/coverage/'
+        'coverage-3.7.tar.gz')
+    MD5SUM = '055d82e6849d882ec6cf2ae1faca8e56'
+
+    payload = urlopen(SOURCE).read()
     if md5(payload).hexdigest() != MD5SUM:
         raise ImportError('Invalid checksum.')
 
-    tar = tarfile.open(mode='r:gz', fileobj=StringIO(payload))
+    tar = tarfile.open(mode='r:gz', fileobj=BytesIO(payload))
     for m in tar.getmembers():
-        if not m.name.startswith('coverage-3.6/coverage/'):
+        if not m.name.startswith('coverage-3.7/coverage/'):
             continue
         m.name = '/'.join(m.name.split('/')[2:])
         tar.extract(m, os.path.join(plugin_path, 'coverage'))
 
-    print 'SublimePythonCoverage successfully installed coverage.py.'
+    print('SublimePythonCoverage successfully installed coverage.py.')
 # end bootstrap
+
+if plugin_path not in sys.path:
+    sys.path.append(plugin_path)
 
 
 import sublime
 import sublime_plugin
 from coverage import coverage
 from coverage.files import FnmatchMatcher
-PLUGIN_FILE = os.path.abspath(__file__)
+
+try:
+    # Python 2
+    basestring
+except NameError:
+    # Python 3
+    basestring = str
 
 
 def find(base, rel, access=os.R_OK):
@@ -69,7 +87,7 @@ def find_tests(fname):
 
 
 class SublimePythonCoverageListener(sublime_plugin.EventListener):
-    """Event listener to highlight uncovered lines when a Python file is loaded."""
+    """Highlight uncovered lines when a Python file is loaded."""
 
     def on_load(self, view):
         if 'source.python' not in view.scope_name(0):
@@ -79,7 +97,10 @@ class SublimePythonCoverageListener(sublime_plugin.EventListener):
 
 
 class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
-    """Highlight uncovered lines in the current file based on a previous coverage run."""
+    """Highlight uncovered lines in the current file.
+
+    Show the info from a previous coverage run.
+    """
 
     def run(self, edit):
         view = self.view
@@ -90,7 +111,7 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
 
         cov_file = find(fname, '.coverage')
         if not cov_file:
-            print 'Could not find .coverage file.'
+            print('Could not find .coverage file.')
             return
 
         config_file = os.path.join(os.path.dirname(cov_file), '.coveragerc')
@@ -115,13 +136,20 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
             view.add_regions('SublimePythonCoverage', outlines,
                              'coverage.missing', 'bookmark', flags)
 
-# manually import the module containing ST2's default build command,
-# since it's in a module whose name is a Python keyword :-s
-ExecCommand = __import__('exec').ExecCommand
+# Manually import the module containing the ExecCommand class
+# since it's in a module whose name is a Python keyword.
+try:
+    # Sublime Text 3
+    import Default
+    ExecCommand = getattr(Default, 'exec').ExecCommand
+except ImportError:
+    # Sublime Text 2
+    ExecCommand = __import__('exec').ExecCommand
 
 
 class TestExecCommand(ExecCommand):
-    """An generic extension of the default build system which shows coverage at the end."""
+    """An extension of the default build system. Shows coverage at the end.
+    """
 
     runner = None
 
