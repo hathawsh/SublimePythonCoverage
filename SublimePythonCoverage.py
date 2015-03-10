@@ -6,15 +6,16 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
     # Fetch coverage.py
     print('SublimePythonCoverage installing coverage.py.')
 
-    from io import BytesIO
     import tarfile
     from hashlib import md5
 
     try:
         # Python 3
+        from io import BytesIO
         from urllib.request import urlopen
     except ImportError:
         # Python 2
+        from StringIO import StringIO as BytesIO
         from urllib2 import urlopen
 
     SOURCE = (
@@ -135,6 +136,7 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
         if outlines:
             view.add_regions('SublimePythonCoverage', outlines,
                              'coverage.missing', 'bookmark', flags)
+
 
 # Manually import the module containing the ExecCommand class
 # since it's in a module whose name is a Python keyword.
