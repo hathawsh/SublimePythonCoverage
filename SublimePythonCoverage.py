@@ -15,12 +15,12 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
         from urllib.request import urlopen
     except ImportError:
         # Python 2
-        from urllib import urlopen
+        from urllib2 import urlopen
 
     SOURCE = (
         'http://pypi.python.org/packages/source/c/coverage/'
-        'coverage-3.7.tar.gz')
-    MD5SUM = '055d82e6849d882ec6cf2ae1faca8e56'
+        'coverage-3.7.1.tar.gz')
+    MD5SUM = 'c47b36ceb17eaff3ecfab3bcd347d0df'
 
     payload = urlopen(SOURCE).read()
     if md5(payload).hexdigest() != MD5SUM:
@@ -28,7 +28,7 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
 
     tar = tarfile.open(mode='r:gz', fileobj=BytesIO(payload))
     for m in tar.getmembers():
-        if not m.name.startswith('coverage-3.7/coverage/'):
+        if not m.name.startswith('coverage-3.7.1/coverage/'):
             continue
         m.name = '/'.join(m.name.split('/')[2:])
         tar.extract(m, os.path.join(plugin_path, 'coverage'))
