@@ -3,8 +3,8 @@ import os
 import sys
 plugin_path = os.path.dirname(__file__)
 if not os.path.exists(os.path.join(plugin_path, 'coverage')):
-    # Fetch coverage.py
-    print('SublimePythonCoverage installing coverage.py.')
+    # Fetch the coverage package
+    print('SublimePythonCoverage installing the coverage package.')
 
     import tarfile
     from hashlib import md5
@@ -19,9 +19,10 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
         from urllib2 import urlopen
 
     SOURCE = (
-        'http://pypi.python.org/packages/source/c/coverage/'
-        'coverage-3.7.1.tar.gz')
-    MD5SUM = 'c47b36ceb17eaff3ecfab3bcd347d0df'
+        'https://pypi.python.org/packages/53/fe/'
+        '9e0fbdbca15c2c1253379c3a694f4315a420555e7874445b06edeaeacaea/'
+        'coverage-4.2.tar.gz')
+    MD5SUM = '1e09362a3f35d589f942359441050a6e'
 
     payload = urlopen(SOURCE).read()
     if md5(payload).hexdigest() != MD5SUM:
@@ -29,21 +30,21 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
 
     tar = tarfile.open(mode='r:gz', fileobj=BytesIO(payload))
     for m in tar.getmembers():
-        if not m.name.startswith('coverage-3.7.1/coverage/'):
+        if not m.name.startswith('coverage-4.2/coverage/'):
             continue
         m.name = '/'.join(m.name.split('/')[2:])
         tar.extract(m, os.path.join(plugin_path, 'coverage'))
 
-    print('SublimePythonCoverage successfully installed coverage.py.')
+    print('SublimePythonCoverage successfully installed the coverage package.')
 # end bootstrap
 
 if plugin_path not in sys.path:
-    sys.path.append(plugin_path)
+    sys.path.insert(0, plugin_path)
 
 
 import sublime
 import sublime_plugin
-from coverage import coverage
+from coverage import Coverage
 from coverage.files import FnmatchMatcher
 
 try:
@@ -57,7 +58,7 @@ except NameError:
 def find(base, rel, access=os.R_OK):
     if not isinstance(rel, basestring):
         rel = os.path.join(*rel)
-    while 1:
+    while True:
         path = os.path.join(base, rel)
         if os.access(path, access):
             return path
@@ -107,13 +108,15 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
         view = self.view
         view.erase_regions('SublimePythonCoverage')
         fname = view.file_name()
-        if not fname:
+        if not fname or not fname.endswith('.py'):
             return
 
         cov_file = find(fname, '.coverage')
         if not cov_file:
-            print('Could not find .coverage file.')
+            print('No .coverage file found near %s' % fname)
             return
+        else:
+            print('Reading coverage data from %s' % cov_file)
 
         config_file = os.path.join(os.path.dirname(cov_file), '.coveragerc')
 
@@ -123,19 +126,17 @@ class ShowPythonCoverageCommand(sublime_plugin.TextCommand):
             flags = sublime.HIDDEN
 
         # run analysis and find uncovered lines
-        cov = coverage(data_file=cov_file, config_file=config_file)
+        cov = Coverage(data_file=cov_file, config_file=config_file)
         outlines = []
-        omit_matcher = FnmatchMatcher(cov.omit)
-        if not omit_matcher.match(fname):
-            cov.load()
+        cov.load()
+        if not cov.omit or not FnmatchMatcher(cov.omit).match(fname):
             f, s, excluded, missing, m = cov.analysis2(fname)
             for line in missing:
                 outlines.append(view.full_line(view.text_point(line - 1, 0)))
 
         # update highlighted regions
-        if outlines:
-            view.add_regions('SublimePythonCoverage', outlines,
-                             'coverage.missing', 'bookmark', flags)
+        view.add_regions('SublimePythonCoverage', outlines,
+                         'coverage.missing', 'bookmark', flags)
 
 
 # Manually import the module containing the ExecCommand class
