@@ -19,10 +19,10 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
         from urllib2 import urlopen
 
     SOURCE = (
-        'https://pypi.python.org/packages/53/fe/'
-        '9e0fbdbca15c2c1253379c3a694f4315a420555e7874445b06edeaeacaea/'
-        'coverage-4.2.tar.gz')
-    MD5SUM = '1e09362a3f35d589f942359441050a6e'
+        'https://pypi.python.org/packages/0b/e1/'
+        '190ef1a264144c9b073b7353c259ca5431b5ddc8861b452e858fcbd0e9de'
+        '/coverage-4.4.2.tar.gz')
+    MD5SUM = '29a9fe85377e0f7327cf5db1e335483f'
 
     payload = urlopen(SOURCE).read()
     if md5(payload).hexdigest() != MD5SUM:
@@ -30,11 +30,12 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
 
     tar = tarfile.open(mode='r:gz', fileobj=BytesIO(payload))
     for m in tar.getmembers():
-        if not m.name.startswith('coverage-4.2/coverage/'):
+        if not m.name.startswith('coverage-4.4.2/coverage/'):
             continue
         m.name = '/'.join(m.name.split('/')[2:])
         tar.extract(m, os.path.join(plugin_path, 'coverage'))
 
+    from coverage import Coverage  # Test the import
     print('SublimePythonCoverage successfully installed the coverage package.')
 # end bootstrap
 
