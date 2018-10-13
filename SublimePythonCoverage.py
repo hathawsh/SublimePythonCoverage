@@ -19,10 +19,10 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
         from urllib2 import urlopen
 
     SOURCE = (
-        'https://pypi.python.org/packages/0b/e1/'
-        '190ef1a264144c9b073b7353c259ca5431b5ddc8861b452e858fcbd0e9de'
-        '/coverage-4.4.2.tar.gz')
-    MD5SUM = '29a9fe85377e0f7327cf5db1e335483f'
+        'https://files.pythonhosted.org/packages/35/fe/'
+        'e7df7289d717426093c68d156e0fd9117c8f4872b6588e8a8928a0f68424/'
+        'coverage-4.5.1.tar.gz')
+    MD5SUM = 'af8a2411aba54e2711a9d2ac0a4c3de2'
 
     payload = urlopen(SOURCE).read()
     if md5(payload).hexdigest() != MD5SUM:
@@ -30,7 +30,7 @@ if not os.path.exists(os.path.join(plugin_path, 'coverage')):
 
     tar = tarfile.open(mode='r:gz', fileobj=BytesIO(payload))
     for m in tar.getmembers():
-        if not m.name.startswith('coverage-4.4.2/coverage/'):
+        if not m.name.startswith('coverage-4.5.1/coverage/'):
             continue
         m.name = '/'.join(m.name.split('/')[2:])
         tar.extract(m, os.path.join(plugin_path, 'coverage'))
